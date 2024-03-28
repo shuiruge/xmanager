@@ -45,18 +45,35 @@ class XManager:
             datetime.now().strftime('%Y-%m-%d-%H-%M-%S'),
         )
 
-        XManager.ensure_dir(self.x_dir)
+        XManager._ensure_dir(self.x_dir)
         script_path = os.path.realpath(sys.argv[0])
         shutil.copy(script_path, self.get_path('source.py'))
 
     @classmethod
-    def ensure_dir(cls, path_to_dir: str):
+    def _ensure_dir(cls, path_to_dir: str):
         pathlib.Path(path_to_dir).mkdir(parents=True, exist_ok=True) 
 
-    def get_path(self, file_or_dir: str, ensure_dir=False):
+    def get_path(self, file_or_dir: str, ensure_dir=None):
+        """
+        Args:
+            file_or_dir (str): File name or directory name.
+            ensure_dir (bool, optional): When it is a directory but does not
+                exist, create one if `ensure_dir` is true. By default, we
+                determine if it is a directory by checking file extension.
+                A directory shall have no extension.
+
+        Returns:
+            str: The absolute path to the `file_or_dir`.
+        """
+        if ensure_dir is None:
+            # Determine if it is a folder by checking file extension.
+            ext = os.path.splitext(file_or_dir)[-1]
+            # If it is a folder, ext is an empty string (i.e. '').
+            ensure_dir = (ext == '')
+
         path = os.path.join(self.x_dir, file_or_dir)
         if ensure_dir:
-            XManager.ensure_dir(path)
+            XManager._ensure_dir(path)
         return path
 
     def get_params(self):
@@ -76,5 +93,6 @@ class XManager:
         return params
 
     def save_params(self):
+        """Save the parameters as JSON to `params.json`."""
         with open(self.get_path('params.json'), 'w') as f:
             json.dump(self.get_params(), f, indent=2)
