@@ -19,7 +19,8 @@ class XManager:
     ```python
     # Initialize.
     # This will generate a path `experiments/1/<datetime>/`.
-    # It will also copy this script to ``experiments/1/<datetime>/source.py`.
+    # It will also copy this script to ``experiments/1/<datetime>/source.py`,
+    # except for REPL mode, where script cannot be copied.
     xm = XManager('experiments', '1')
 
     # Add parameters.
@@ -79,7 +80,7 @@ class XManager:
         """
         path = os.path.join(self.x_dir, file_or_dir)
         if ensure_dir:
-            XManager._ensure_dir(path)
+            self._ensure_dir(path)
         return path
 
     def get_params(self):
