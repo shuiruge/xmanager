@@ -42,15 +42,16 @@ class XManager:
 
     def __init__(self, *base_dir: str):
         base_dir = os.path.join(*base_dir)
+
         self.x_dir = os.path.join(
             os.path.abspath(base_dir),
             datetime.now().strftime('%Y-%m-%d-%H-%M-%S'),
         )
-
         XManager._ensure_dir(self.x_dir)
-        script_path = os.path.realpath(sys.argv[0])
-        # If in RELP, script_path will be empty.
-        if script_path:
+
+        # If in RELP, sys.argv[0] will be empty.
+        if sys.argv[0]:
+            script_path = os.path.realpath(sys.argv[0])
             shutil.copy(script_path, self.get_path('source.py'))
 
     @classmethod
