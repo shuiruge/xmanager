@@ -31,8 +31,8 @@ class XManager:
 
     # The `get_path` method can give you a path to save something,
     # such as path to model checkpoint.
-    # For example, save figure to `experiments/<datetime>/my_plot.png`.
-    plt.savefig(xm.get_path('my_plot.png'))
+    # For example, save figure to `experiments/<datetime>/figures/my_plot.png`.
+    plt.savefig(xm.get_path('figures', 'my_plot.png'))
 
     # Save parameters to `experiments/<datetime>/params.json`
     # The parameters are those assigned by `xm.<param> = <value>`.
@@ -69,17 +69,17 @@ class XManager:
             dir_path = os.path.dirname(path)
         pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True) 
 
-    def get_path(self, file_or_dir: str, ensure_dir=True):
+    def get_path(self, *file_or_dir: str, ensure_dir=True):
         """
         Args:
-            file_or_dir (str): File name or directory name.
+            file_or_dir (str): Relative path to a file or directory.
             ensure_dir (bool, optional): When it is a directory but does not
                 exist, create one if `ensure_dir` is true.
 
         Returns:
             str: The absolute path to the `file_or_dir`.
         """
-        path = os.path.join(self.x_dir, file_or_dir)
+        path = os.path.join(self.x_dir, *file_or_dir)
         if ensure_dir:
             self._ensure_dir(path)
         return path
