@@ -84,20 +84,45 @@ class XManager:
             self._ensure_dir(path)
         return path
 
-    def get_params(self):
-        params: Dict[str, Any] = {}
-        for k, v in self.__dict__.items():
-            if k == 'x_dir':
-                continue
-            # np.ndarray is not JSON serializable.
-            if isinstance(v, np.ndarray):
-                v = v.tolist()
-            # Exclude all other non-serializable objects.
+    @classmethod
+    def jsonfy(cls, x, omit_non_serializable=False):
+        """Auxiliary class method for JSONfying an object x.
+        
+        Args:
+            x (object): Being any type of object.
+            omit_non_serializable (bool, optional): If false, then raise type-
+                error whenever encountering a sub-object of x which is not JSON
+                serializable.
+        Returns:
+            dict: The JSON dictionary.
+        
+        Raises:
+            TypeError: If omit_non_serializable is false and non serializable
+                object is met.
+        """
+        # np.ndarray is not JSON serializable.
+        if isinstance(x, np.ndarray):
+            return x.tolist()
+        # TODO: convert other objects which are not JSON serializable.
+        if not hasattr(x, '__dict__'):
+            return x
+ 
+        json_dict : Dict[str, Any] = {}
+        for k, v in x.__dict__.items():
+            # Check serializablility.
             try:
                 json.dumps(v)
             except TypeError:
-                continue
-            params[k] = v
+                if omit_non_serializable:
+                    continue
+                raise TypeError(f'Value of "{k}" is of type "{type(v)}" '
+                                'which is non-serializable.')
+            json_dict[k] = XManager.jsonfy(v, omit_non_serializable)
+        return json_dict
+
+    def get_params(self):
+        params = XManager.jsonfy(self, omit_non_serializable=True)
+        del params['x_dir']
         return params
 
     def save_params(self):
