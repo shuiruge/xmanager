@@ -85,43 +85,44 @@ class XManager:
         return path
 
     @classmethod
-    def jsonfy(cls, x, omit_non_serializable=False):
+    def jsonfy(cls, x):
         """Auxiliary class method for JSONfying an object x.
         
         Args:
             x (object): Being any type of object.
-            omit_non_serializable (bool, optional): If false, then raise type-
-                error whenever encountering a sub-object of x which is not JSON
-                serializable.
+
         Returns:
             dict: The JSON dictionary.
         
         Raises:
-            TypeError: If omit_non_serializable is false and non serializable
-                object is met.
+            TypeError: When non JSON-serializable object is met.
         """
         # np.ndarray is not JSON serializable.
         if isinstance(x, np.ndarray):
             return x.tolist()
+        if isinstance(x, dict):
+            return {
+                k: XManager.jsonfy(v)
+                for k, v in x.items()
+            }
+        if isinstance(x, (list, tuple)):
+            return [XManager.jsonfy(xi) for xi in x]
         # TODO: convert other objects which are not JSON serializable.
         if not hasattr(x, '__dict__'):
+            # Check serializablility.
+            try:
+                json.dumps(x)
+            except TypeError:
+                raise TypeError(f'Type "{type(x)}" is not JSON-serializable.')
             return x
  
         json_dict : Dict[str, Any] = {}
         for k, v in x.__dict__.items():
-            # Check serializablility.
-            try:
-                json.dumps(v)
-            except TypeError:
-                if omit_non_serializable:
-                    continue
-                raise TypeError(f'Value of "{k}" is of type "{type(v)}" '
-                                'which is non-serializable.')
-            json_dict[k] = XManager.jsonfy(v, omit_non_serializable)
+            json_dict[k] = XManager.jsonfy(v)
         return json_dict
 
     def get_params(self):
-        params = XManager.jsonfy(self, omit_non_serializable=True)
+        params = XManager.jsonfy(self)
         del params['x_dir']
         return params
 
